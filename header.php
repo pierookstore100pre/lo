@@ -136,7 +136,7 @@ $(document).ready(function() {
 
 		</div>  <!-- category-wrap.// -->
 	</div> <!-- col.// -->
-	<a href="./store.html" class="btn btn-outline-primary">Tienda</a>
+	<a href="./tienda.php" class="btn btn-outline-primary">Tienda</a>
 	<div class="col-lg  col-md-6 col-sm-12 col">
 		<form action="#" class="search">
 			<div class="input-group w-100">

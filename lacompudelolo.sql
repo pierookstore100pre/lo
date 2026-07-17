@@ -31,7 +31,7 @@ CREATE TABLE `carrito` (
   PRIMARY KEY (`id`),
   KEY `usuario_id` (`usuario_id`),
   KEY `producto_id` (`producto_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -40,6 +40,7 @@ CREATE TABLE `carrito` (
 
 LOCK TABLES `carrito` WRITE;
 /*!40000 ALTER TABLE `carrito` DISABLE KEYS */;
+INSERT INTO `carrito` VALUES (1,1,30,1,'2026-07-16 02:08:44'),(2,1,29,2,'2026-07-16 02:14:08'),(3,1,27,1,'2026-07-16 02:15:01'),(4,1,24,1,'2026-07-16 02:15:12');
 /*!40000 ALTER TABLE `carrito` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -147,9 +148,10 @@ CREATE TABLE `productos` (
   `stock` int(11) NOT NULL DEFAULT '0',
   `destacado` tinyint(1) DEFAULT '0',
   `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `activo` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`id`),
   KEY `categoria_id` (`categoria_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=9 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=31 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -158,7 +160,7 @@ CREATE TABLE `productos` (
 
 LOCK TABLES `productos` WRITE;
 /*!40000 ALTER TABLE `productos` DISABLE KEYS */;
-INSERT INTO `productos` VALUES (1,'Lenovo LOQ','Laptop Gamer Intel Core i5',3150.00,2990.00,'01lenovo_loq.jpg',1,10,0,'2026-07-12 21:06:33'),(2,'Asus Tuf Gaming','Laptop Gamer AMD Ryzen 7',3500.00,3200.00,'02asus_tuf.jpg',1,8,0,'2026-07-12 21:06:33'),(3,'Mouse Logitech G203','Mouse Gamer RGB 8000 DPI',135.00,100.00,'03mouse_g203.jpg',5,25,0,'2026-07-12 21:06:33'),(4,'Audífono Logitech G332','Audífono Gamer Pc/laptop',150.00,130.00,'04audifono_g332',5,15,0,'2026-07-12 21:06:33'),(5,'Teclado Logitech TKL G915','Teclado Gamer Mecánico Inalámbrico',750.00,600.00,'05teclado_915tkl',4,18,0,'2026-07-12 21:06:33'),(6,'Tarjeta RTX3090 Asus','Tarjeta Video Asus RTX3090 24GB',10500.00,6600.00,'06tg_rtx3090',8,5,0,'2026-07-12 21:06:33'),(7,'Tableta WACOM INTUOS','Tableta Grafica Wacom Intuos S',350.00,300.00,'07wacom_intuos',10,22,0,'2026-07-12 21:06:33'),(8,'Parlantes Logitech Z213','Parlantes Logitech Z213',160.00,140.00,'08parlante_z213',11,24,0,'2026-07-12 21:06:33');
+INSERT INTO `productos` VALUES (1,'Ultra Slim T-889','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',2087.99,NULL,'img1.jpg',4,40,0,'2026-07-14 18:04:19',1),(2,'Quantum W-356','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',1003.99,NULL,'img2.jpg',6,20,0,'2026-07-14 18:04:19',1),(3,'Xtreme B-951','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',2482.99,NULL,'img3.jpg',7,50,0,'2026-07-14 18:04:19',1),(4,'Acer Predator','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',225.99,NULL,'img16.jpg',1,24,0,'2026-07-14 18:04:19',1),(5,'Eco O-645','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',234.99,NULL,'img5.jpg',7,25,0,'2026-07-14 18:04:19',1),(6,'Xtreme G-415','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',530.99,NULL,'img6.jpg',6,32,0,'2026-07-14 18:04:19',1),(7,'Acer Nitro','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',1171.99,NULL,'img15.jpg',1,15,0,'2026-07-14 18:04:19',1),(8,'Dell Alienware','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',466.99,NULL,'img14.jpg',1,20,0,'2026-07-14 18:04:19',1),(9,'Zen Y-763','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',1469.99,NULL,'img9.jpg',9,17,0,'2026-07-14 18:04:19',1),(10,'Nova X-126','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',2030.99,NULL,'img10.jpg',2,22,0,'2026-07-14 18:04:19',1),(11,'Ultra Slim O-385','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',631.99,NULL,'img11.jpg',11,46,0,'2026-07-14 18:04:19',1),(12,'Thor U-573','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',222.99,NULL,'img12.jpg',9,25,0,'2026-07-14 18:04:19',1),(13,'Atlas D-665','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',1477.99,NULL,'img13.jpg',2,5,0,'2026-07-14 18:04:19',1),(14,'Laptop Gamer Lenovo LOQ','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',4399.99,NULL,'img1.jpg',4,45,0,'2026-07-14 18:04:19',1),(15,'Laptop Gamer','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',3399.99,NULL,'img2.jpg',8,13,0,'2026-07-14 18:04:19',1),(16,'Mouse Gamer Lighstin','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',99.99,NULL,'img3.jpg',3,43,0,'2026-07-14 18:04:19',1),(17,'Audífono Gamer G332','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',139.99,NULL,'img4.jpg',10,19,0,'2026-07-14 18:04:19',1),(18,'Teclado Gamer G915TKL','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',599.99,NULL,'img5.jpg',3,42,0,'2026-07-14 18:04:19',1),(19,'Tarjeta de video RTX3090 Asus TUF','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',6599.99,NULL,'img6.jpg',7,20,0,'2026-07-14 18:04:19',1),(20,'Tableta gráfica Wacom intuos','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',249.99,NULL,'img7.jpg',11,44,0,'2026-07-14 18:04:19',1),(21,'Parlante Logitech Z213','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',139.99,NULL,'img8.jpg',7,23,0,'2026-07-14 18:04:19',1),(22,'Asus Rog Strix G16','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',6899.99,NULL,'img9.jpg',10,29,0,'2026-07-14 18:04:19',1),(23,'Fuente Poder Atom 550','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',189.99,NULL,'img10.jpg',8,25,0,'2026-07-14 18:04:19',1),(24,'Web cam Logitech c922e','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',249.99,NULL,'img11.jpg',6,14,0,'2026-07-14 18:04:19',1),(25,'Parlante BT Wonderwoom Lila','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',139.99,NULL,'img12.jpg',10,29,0,'2026-07-14 18:04:19',1),(26,'Parlante BT Wonderwoom red','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',139.99,NULL,'img13.jpg',8,31,0,'2026-07-14 18:04:19',1),(27,'Lenovo LOQ Gaming','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',3099.99,NULL,'img1.jpg',10,12,0,'2026-07-14 18:04:19',1),(28,'Asus TUF Gaming F15','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',3199.99,NULL,'img2.jpg',8,34,0,'2026-07-14 18:04:19',1),(29,'Mouse Logitech G203','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',99.99,NULL,'img3.jpg',3,11,0,'2026-07-14 18:04:19',1),(30,'Audífono Logitech G332','Producto de alta gama con tecnologÃ­a de punta y rendimiento excepcional.',129.99,NULL,'img4.jpg',11,36,0,'2026-07-14 18:04:19',1);
 /*!40000 ALTER TABLE `productos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -180,7 +182,7 @@ CREATE TABLE `usuarios` (
   `fecha_registro` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -189,6 +191,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
+INSERT INTO `usuarios` VALUES (1,'alex portillo','pierookstore@gmail.com','$2y$10$mYiIvvhzGwNZuijtyBFskOewbYH3sLe1QfyXxGmG15D3S2zsPYayO',NULL,NULL,'cliente','2026-07-16 00:01:56');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -205,4 +208,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-13 18:32:06
+-- Dump completed on 2026-07-17 12:51:35

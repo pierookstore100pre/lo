@@ -1,343 +1,66 @@
+<?php
+include('header.php');
+?>
 
-<?php include('header.php'); ?>
-
-
-
-<!-- ========================= SECTION MAIN ========================= -->
+<!-- ========================= SECTION MAIN ========================= BANNER CON CARRUSEL -->
 <section class="section-intro padding-y-sm">
-<div class="container">
-
-<div class="intro-banner-wrap">
-	<img src="images/banners/2.png" class="img-fluid rounded">
-	    <!--<h1 class="display-4 fw-bold">¡Armamos tu PC Gamer!</h1>
-       <p class="lead">Los mejores componentes al mejor precio del Perú.</p>
-      -->
-</div>
-
-
-</div> <!-- container //  -->
+   <div class="container">
+      <div class="intro-banner-wrap" style="padding: 0; overflow: hidden; border-radius: 12px;">
+         <!-- CARRUSEL BOOTSTRAP 4 (SIN BOTONES) -->
+         <div id="bannerCarousel" class="carousel slide" data-ride="carousel" data-interval="3000">
+            <div class="carousel-inner">
+               <div class="carousel-item active">
+                  <img src="img/2.png" class="d-block w-100" alt="Banner 1" style="width: 100%; height: 460px; object-fit: cover;">
+               </div>
+               <div class="carousel-item">
+                  <img src="img/3.png" class="d-block w-100" alt="Banner 2" style="width: 100%; height: 460px; object-fit: cover;">
+               </div>
+            </div>
+            <!-- SIN CONTROLES (botones eliminados) -->
+         </div>
+      </div>
+   </div>
 </section>
-<!-- ========================= SECTION MAIN END// ========================= -->
 
-<!-- ========================= SECTION  ========================= -->
+<!-- ========================= SECTION PRODUCTOS POPULARES ========================= -->
 <section class="section-name padding-y-sm">
-<div class="container">
+   <div class="container">
+      <header class="section-heading">
+         <a href="tienda.php" class="btn btn-outline-primary float-right">Todos</a>
+         <h3 class="section-title">Productos populares</h3>
+      </header>
 
-<header class="section-heading">
-	<a href="./store.html" class="btn btn-outline-primary float-right">Todos</a>
-	<h3 class="section-title">Productos populares</h3>
-</header><!-- sect-heading -->
+      <!-- ============================  PRODUCTOS POPULARES  WEB DINAMICA ========================= -->
+      <div class="row">
+         <?php
+         // Consultar productos
+         $sql = "SELECT * FROM productos WHERE activo = 1 ORDER BY id DESC LIMIT 8";
+         $resultado = $conexion->query($sql);
 
-	
-<div class="row">
-	<div class="col-md-3">
-		<!--REEMPLAZANDO ESTE CONTENIDO PARA QUE SEA MAS FACIL DE EDITAR Y RECORDAR EN EL ITEM PRODUCTO OJOOOOOOOOOOOOOOOOOOOO
-		<div class="card card-product-grid">
-			<a href="./product-detail.html" class="img-wrap"> <img src="images/items/1.jpg"> </a>
-			<figcaption class="info-wrap">
-				<a href="./product-detail.html" class="title">Just another product name</a>
-				<div class="price mt-1">$179.00</div> 
-			</figcaption>
-		</div>
-		-->
-
-		<div class="card card-product-grid shadow-sm" style="transition: transform 0.2s; border-radius: 12px;">
-   		<a href="./product-detail.html" class="img-wrap" style="background: #f5f7fa; border-radius: 12px 12px 0 0;">
-      <img src="images/items/01lenovo_loq.jpg" class="img-fluid" style="max-height: 280px; padding: 10px;">
-      <!-- Badge de oferta -->
-
-      <!-- CONTENIDO REEMPLAZADO 
-      <span class="badge bg-danger" style="position: absolute; top: 10px; left: 10px;">-20%</span>
-	  -->
-	  <span class="badge bg-dark text-white" style="position: absolute; top: 10px; left: 10px; font-weight: 700; padding: 6px 8px; border-radius: 30px;">-25%</span>
-
-   		</a>
-   		<figcaption class="info-wrap p-3">
-      <a href="#" class="title text-dark fw-bold" style="font-size: 0.9rem;">Lenovo LOQ</a>
-      <!-- Estrellas de rating (estáticas) -->
-      <div class="rating-wrap mb-1">
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star-half-alt text-warning"></i>
-         <span class="text-muted small">(45)</span>
+         if ($resultado->num_rows > 0) {
+            while ($producto = $resultado->fetch_assoc()) {
+         ?>
+               <div class="col-md-3 col-6 mb-4">
+                  <div class="card h-100 shadow-sm">
+                     <img src="img/<?= $producto['imagen'] ?>"
+                        class="card-img-top"
+                        alt="<?= $producto['nombre'] ?>"
+                        style="height: 200px; object-fit: cover; background: #f8f9fa;">
+                     <div class="card-body d-flex flex-column">
+                        <h6 class="card-title text-truncate" title="<?= $producto['nombre'] ?>"><?= $producto['nombre'] ?></h6>
+                        <p class="text-danger fw-bold fs-5 mt-auto">$<?= number_format($producto['precio'], 2) ?></p>
+                        <a href="producto.php?id=<?= $producto['id'] ?>" class="btn btn-sm btn-primary w-100">Ver Detalle</a>
+                     </div>
+                  </div>
+               </div>
+         <?php
+            }
+         } else {
+            echo '<div class="col-12"><p class="text-center">No hay productos disponibles en la tienda.</p></div>';
+         }
+         ?>
       </div>
-      <div class="price mt-1">
-         <span class="text-muted" style="text-decoration: line-through; font-size: 0.9rem;">S/ 3150.00</span>
-         <span class="fw-bold text-primary" style="font-size: 1.3rem;">S/ 2990.00</span>
-      </div>
-      <!-- Botón flotante (aparece en hover) -->
-      <button class="btn btn-outline-primary btn-sm mt-2 w-100" onclick="alert('Añadido al carrito')">
-         <i class="fas fa-cart-plus"></i> Añadir
-      </button>
-   		</figcaption>
-		</div>
-
-		<!--REEMPLAZANDO HASTA AQUI  OJOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO -->
-	</div> <!-- col.// -->
-
-    <div class="col-md-3">
-
-        <div class="card card-product-grid shadow-sm" style="transition: transform 0.2s; border-radius: 12px;">
-        <a href="./product-detail.html" class="img-wrap" style="background: #f5f7fa; border-radius: 12px 12px 0 0;">
-      <img src="images/items/02asus_tuf.jpg" class="img-fluid" style="max-height: 280px; padding: 10px;">
-      <!-- Badge de oferta -->
-      
-      <span class="badge bg-dark text-white" style="position: absolute; top: 10px; left: 10px; font-weight: 700; padding: 6px 8px; border-radius: 30px;">-18%</span>
-
-
-        </a>
-        <figcaption class="info-wrap p-3">
-      <a href="#" class="title text-dark fw-bold" style="font-size: 0.9rem;">Asus Tuf Gaming</a>
-      <!-- Estrellas de rating (estáticas) -->
-      <div class="rating-wrap mb-1">
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star-half-alt text-warning"></i>
-         <span class="text-muted small">(40)</span>
-      </div>
-      <div class="price mt-1">
-         <span class="text-muted" style="text-decoration: line-through; font-size: 0.9rem;">S/ 3500.00</span>
-         <span class="fw-bold text-primary" style="font-size: 1.3rem;">S/ 3200.00</span>
-      </div>
-      <!-- Botón flotante (aparece en hover) -->
-      <button class="btn btn-outline-primary btn-sm mt-2 w-100" onclick="alert('Añadido al carrito')">
-         <i class="fas fa-cart-plus"></i> Añadir
-      </button>
-        </figcaption>
-        </div>
-
-    </div> <!-- col.// -->
-
-
-
-    <div class="col-md-3">
-
-        <div class="card card-product-grid shadow-sm" style="transition: transform 0.2s; border-radius: 12px;">
-        <a href="./product-detail.html" class="img-wrap" style="background: #f5f7fa; border-radius: 12px 12px 0 0;">
-      <img src="images/items/03mouse_g203.jpg" class="img-fluid" style="max-height: 280px; padding: 10px;">
-      <!-- Badge de oferta -->
-      
-        <span class="badge bg-dark text-white" style="position: absolute; top: 10px; left: 10px; font-weight: 700; padding: 6px 8px; border-radius: 30px;">-21%</span>
-
-      
-        </a>
-        <figcaption class="info-wrap p-3">
-      <a href="#" class="title text-dark fw-bold" style="font-size: 0.9rem;">Mouse Logitech G203 </a>
-      <!-- Estrellas de rating (estáticas) -->
-      <div class="rating-wrap mb-1">
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star-half-alt text-warning"></i>
-         <span class="text-muted small">(45)</span>
-      </div>
-      <div class="price mt-1">
-         <span class="text-muted" style="text-decoration: line-through; font-size: 0.9rem;">S/ 135.00</span>
-         <span class="fw-bold text-primary" style="font-size: 1.3rem;">S/ 100.00</span>
-      </div>
-      <!-- Botón flotante (aparece en hover) -->
-      <button class="btn btn-outline-primary btn-sm mt-2 w-100" onclick="alert('Añadido al carrito')">
-         <i class="fas fa-cart-plus"></i> Añadir
-      </button>
-        </figcaption>
-        </div>
-
-    </div> <!-- col.// -->
-
-
-
-    <div class="col-md-3">
-
-        <div class="card card-product-grid shadow-sm" style="transition: transform 0.2s; border-radius: 12px;">
-        <a href="./product-detail.html" class="img-wrap" style="background: #f5f7fa; border-radius: 12px 12px 0 0;">
-      <img src="images/items/04audifono_g332.jpg" class="img-fluid" style="max-height: 280px; padding: 10px;">
-      <!-- Badge de oferta -->
-
-      <span class="badge bg-dark text-white" style="position: absolute; top: 10px; left: 10px; font-weight: 700; padding: 6px 8px; border-radius: 30px;">-25%</span>
-
-        </a>
-        <figcaption class="info-wrap p-3">
-      <a href="#" class="title text-dark fw-bold" style="font-size: 0.9rem;">Audífono Logitech G332 </a>
-      <!-- Estrellas de rating (estáticas) -->
-      <div class="rating-wrap mb-1">
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star-half-alt text-warning"></i>
-         <span class="text-muted small">(45)</span>
-      </div>
-      <div class="price mt-1">
-         <span class="text-muted" style="text-decoration: line-through; font-size: 0.9rem;">S/ 150.00</span>
-         <span class="fw-bold text-primary" style="font-size: 1.3rem;">S/ 130.00</span>
-      </div>
-      <!-- Botón flotante (aparece en hover) -->
-      <button class="btn btn-outline-primary btn-sm mt-2 w-100" onclick="alert('Añadido al carrito')">
-         <i class="fas fa-cart-plus"></i> Añadir
-      </button>
-        </figcaption>
-        </div>
-
-    </div> <!-- col.// -->
-
-
-       <div class="col-md-3">
-
-        <div class="card card-product-grid shadow-sm" style="transition: transform 0.2s; border-radius: 12px;">
-        <a href="./product-detail.html" class="img-wrap" style="background: #f5f7fa; border-radius: 12px 12px 0 0;">
-      <img src="images/items/05teclado_915tkl.jpg" class="img-fluid" style="max-height: 280px; padding: 10px;">
-      <!-- Badge de oferta -->
-
-      <span class="badge bg-dark text-white" style="position: absolute; top: 10px; left: 10px; font-weight: 700; padding: 6px 8px; border-radius: 30px;">-25%</span>
-
-        </a>
-        <figcaption class="info-wrap p-3">
-      <a href="#" class="title text-dark fw-bold" style="font-size: 0.9rem;">Teclado Logitech TKL 915 </a>
-      <!-- Estrellas de rating (estáticas) -->
-      <div class="rating-wrap mb-1">
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star-half-alt text-warning"></i>
-         <span class="text-muted small">(45)</span>
-      </div>
-      <div class="price mt-1">
-         <span class="text-muted" style="text-decoration: line-through; font-size: 0.9rem;">S/ 750.00</span>
-         <span class="fw-bold text-primary" style="font-size: 1.3rem;">S/ 600.00</span>
-      </div>
-      <!-- Botón flotante (aparece en hover) -->
-      <button class="btn btn-outline-primary btn-sm mt-2 w-100" onclick="alert('Añadido al carrito')">
-         <i class="fas fa-cart-plus"></i> Añadir
-      </button>
-        </figcaption>
-        </div>
-
-    </div> <!-- col.// -->
-
-
-
-        <div class="col-md-3">
-
-        <div class="card card-product-grid shadow-sm" style="transition: transform 0.2s; border-radius: 12px;">
-        <a href="./product-detail.html" class="img-wrap" style="background: #f5f7fa; border-radius: 12px 12px 0 0;">
-      <img src="images/items/06tg_rtx3090.jpg" class="img-fluid" style="max-height: 280px; padding: 10px;">
-      <!-- Badge de oferta -->
-
-      <span class="badge bg-dark text-white" style="position: absolute; top: 10px; left: 10px; font-weight: 700; padding: 6px 8px; border-radius: 30px;">-30%</span>
-
-        </a>
-        <figcaption class="info-wrap p-3">
-      <a href="#" class="title text-dark fw-bold" style="font-size: 0.9rem;">Tarjeta Gráfica Asus Rog Strix RTX </a>
-      <!-- Estrellas de rating (estáticas) -->
-      <div class="rating-wrap mb-1">
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star-half-alt text-warning"></i>
-         <span class="text-muted small">(50)</span>
-      </div>
-      <div class="price mt-1">
-         <span class="text-muted" style="text-decoration: line-through; font-size: 0.9rem;">S/ 10500.00</span>
-         <span class="fw-bold text-primary" style="font-size: 1.3rem;">S/ 6600.00</span>
-      </div>
-      <!-- Botón flotante (aparece en hover) -->
-      <button class="btn btn-outline-primary btn-sm mt-2 w-100" onclick="alert('Añadido al carrito')">
-         <i class="fas fa-cart-plus"></i> Añadir
-      </button>
-        </figcaption>
-        </div>
-
-    </div> <!-- col.// -->
-
-
-
-    <div class="col-md-3">
-
-        <div class="card card-product-grid shadow-sm" style="transition: transform 0.2s; border-radius: 12px;">
-        <a href="./product-detail.html" class="img-wrap" style="background: #f5f7fa; border-radius: 12px 12px 0 0;">
-      <img src="images/items/07wacom_intuos.jpg" class="img-fluid" style="max-height: 280px; padding: 10px;">
-      <!-- Badge de oferta -->
-
-      <span class="badge bg-dark text-white" style="position: absolute; top: 10px; left: 10px; font-weight: 700; padding: 6px 8px; border-radius: 30px;">-20%</span>
-
-        </a>
-        <figcaption class="info-wrap p-3">
-      <a href="#" class="title text-dark fw-bold" style="font-size: 0.9rem;">Tableta Gráfica Wacom Intuos </a>
-      <!-- Estrellas de rating (estáticas) -->
-      <div class="rating-wrap mb-1">
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star-half-alt text-warning"></i>
-         <span class="text-muted small">(40)</span>
-      </div>
-      <div class="price mt-1">
-         <span class="text-muted" style="text-decoration: line-through; font-size: 0.9rem;">S/ 350.00</span>
-         <span class="fw-bold text-primary" style="font-size: 1.3rem;">S/ 300.00</span>
-      </div>
-      <!-- Botón flotante (aparece en hover) -->
-      <button class="btn btn-outline-primary btn-sm mt-2 w-100" onclick="alert('Añadido al carrito')">
-         <i class="fas fa-cart-plus"></i> Añadir
-      </button>
-        </figcaption>
-        </div>
-
-    </div> <!-- col.// -->
-
-
-
-        <div class="col-md-3">
-
-        <div class="card card-product-grid shadow-sm" style="transition: transform 0.2s; border-radius: 12px;">
-        <a href="./product-detail.html" class="img-wrap" style="background: #f5f7fa; border-radius: 12px 12px 0 0;">
-      <img src="images/items/08parlante_z213.jpg" class="img-fluid" style="max-height: 280px; padding: 10px;">
-      <!-- Badge de oferta -->
-
-      <span class="badge bg-dark text-white" style="position: absolute; top: 10px; left: 10px; font-weight: 700; padding: 6px 8px; border-radius: 30px;">-20%</span>
-
-        </a>
-        <figcaption class="info-wrap p-3">
-      <a href="#" class="title text-dark fw-bold" style="font-size: 0.9rem;">Parlantes Logitech Z213 </a>
-      <!-- Estrellas de rating (estáticas) -->
-      <div class="rating-wrap mb-1">
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star text-warning"></i>
-         <i class="fas fa-star-half-alt text-warning"></i>
-         <span class="text-muted small">(45)</span>
-      </div>
-      <div class="price mt-1">
-         <span class="text-muted" style="text-decoration: line-through; font-size: 0.9rem;">S/ 160.00</span>
-         <span class="fw-bold text-primary" style="font-size: 1.3rem;">S/ 140.00</span>
-      </div>
-      <!-- Botón flotante (aparece en hover) -->
-      <button class="btn btn-outline-primary btn-sm mt-2 w-100" onclick="alert('Añadido al carrito')">
-         <i class="fas fa-cart-plus"></i> Añadir
-      </button>
-        </figcaption>
-        </div>
-
-    </div> <!-- col.// -->
-
- 
-
-
-
-</div> <!-- row.// -->
-
-</div><!-- container // -->
+   </div>
 </section>
-<!-- ========================= SECTION  END// ========================= -->
 
 <?php include('footer.php'); ?>
-
-

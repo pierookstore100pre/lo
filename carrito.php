@@ -1,5 +1,7 @@
 <?php
-
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 include('conexion.php');
 
 // Si no está logueado, redirigir
@@ -8,24 +10,28 @@ if (!isset($_SESSION['usuario_id'])) {
     exit;
 }
 
-$usuario_id = $_SESSION['usuario_id'];
+$usuario_id = intval($_SESSION['usuario_id']);
 
-// Consultar el carrito con información del producto
+// Consultar el carrito con información del producto usando Prepared Statements
 $sql = "SELECT c.id as carrito_id, c.cantidad, p.id as producto_id, p.nombre, p.precio, p.imagen 
         FROM carrito c 
         INNER JOIN productos p ON c.producto_id = p.id 
-        WHERE c.usuario_id = $usuario_id";
-$resultado = $conexion->query($sql);
+        WHERE c.usuario_id = ?";
+$stmt = $conexion->prepare($sql);
+$stmt->bind_param("i", $usuario_id);
+$stmt->execute();
+$resultado = $stmt->get_result();
 
 // Calcular total
 $total = 0;
 $items = [];
-if ($resultado->num_rows > 0) {
+if ($resultado && $resultado->num_rows > 0) {
     while ($row = $resultado->fetch_assoc()) {
         $items[] = $row;
         $total += $row['precio'] * $row['cantidad'];
     }
 }
+$stmt->close();
 
 include('header.php');
 ?>

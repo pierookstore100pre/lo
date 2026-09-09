@@ -1,11 +1,13 @@
 <?php
+ini_set('default_charset', 'UTF-8');
+
 // ============================================
 // 1. CONFIGURACIÓN DE LA BASE DE DATOS
 // ============================================
 $servidor = "localhost";
-$usuario = "root";        // En WAMP por defecto es 'root'
-$clave = "";              // En WAMP por defecto está VACÍA (sin contraseña)
-$basedatos = "lacompudelolo"; // El nombre exacto de tu BD
+$usuario = "root";
+$clave = "";
+$basedatos = "lacompudelolo";
 
 // Crear la conexión
 $conexion = new mysqli($servidor, $usuario, $clave, $basedatos);
@@ -14,9 +16,9 @@ $conexion = new mysqli($servidor, $usuario, $clave, $basedatos);
 if ($conexion->connect_error) {
     die("Error de conexión: " . $conexion->connect_error);
 }
-// (Opcional) Para ver que todo va bien, descomenta la línea de abajo:
-// echo "Conexión exitosa a la BD";
 
-$conexion->set_charset("utf8");
+// Configurar juego de caracteres a utf8mb4
+$conexion->set_charset("utf8mb4");
 
 ?>
+

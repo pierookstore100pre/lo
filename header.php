@@ -34,7 +34,7 @@ if (isset($_SESSION['usuario_id'])) {
 
 	<title>La Compu de Lolo | Tienda de Cómputo</title>
 
-	<link href="images/favicon.ico" rel="shortcut icon" type="image/x-icon">
+	<link href="img/favicon.ico" rel="shortcut icon" type="image/x-icon">
 
 	<!-- Google Fonts: Inter -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -170,4 +170,4 @@ if (isset($_SESSION['usuario_id'])) {
 	</div>
 
 
-
+

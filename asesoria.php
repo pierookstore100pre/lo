@@ -9,6 +9,10 @@ include 'header.php';
             <h1 class="text-center">Asesoría Gratuita</h1>
             <p class="lead text-center">Te ayudamos a elegir los mejores productos para ti.</p>
             <hr>
+            <?php if (isset($_GET['enviado'])): ?>
+            <div class="alert alert-success text-center">¡Solicitud enviada! Te contactaremos pronto.</div>
+            <?php endif; ?>
+
             <form action="enviar-asesoria.php" method="POST">
                 <div class="mb-3">
                     <label for="nombre" class="form-label">Nombre completo</label>

@@ -4,24 +4,48 @@
 // Acceso restringido - Solo personal autorizado
 // ============================================================
 
-if (session_status() === PHP_SESSION_NONE) session_start();
-include('conexion.php');
+// ── SESIÓN SEGURA ──────────────────────────────────────────
+if (session_status() === PHP_SESSION_NONE) {
+    // Configurar cookies de sesión de forma compatible con cualquier PHP
+    if (PHP_VERSION_ID >= 70300) {
+        session_set_cookie_params([
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    } else {
+        session_set_cookie_params(0, '/; samesite=Lax', '', false, true);
+    }
+    ini_set('session.use_strict_mode', '1');
+    session_start();
+}
+include_once('conexion.php');
 
-// ── CREDENCIALES DE ADMINISTRADOR ──────────────────────────
-define('ADMIN_USER', 'admin');
-define('ADMIN_PASS', 'LaCompuAdmin2025#');
+// ── CREDENCIALES (desde config.php, NO hardcodeadas) ───────
+if (file_exists(__DIR__ . '/config.php')) {
+    include_once(__DIR__ . '/config.php');
+}
+if (!defined('ADMIN_USER'))     define('ADMIN_USER', 'admin');
+if (!defined('ADMIN_PASS_HASH')) {
+    // Fallback de emergencia: si no existe config.php, se deniega el acceso
+    define('ADMIN_PASS_HASH', '');
+}
 
 // ── LOGOUT ─────────────────────────────────────────────────
 if (isset($_GET['logout'])) {
     unset($_SESSION['admin_logged']);
+    session_regenerate_id(true);
     header('Location: admin.php');
     exit;
 }
 
-// ── PROCESAR LOGIN ──────────────────────────────────────────
+// ── PROCESAR LOGIN ─────────────────────────────────────────
 $login_error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_login'])) {
-    if ($_POST['admin_user'] === ADMIN_USER && $_POST['admin_pass'] === ADMIN_PASS) {
+    $user_ok = hash_equals(ADMIN_USER, (string)($_POST['admin_user'] ?? ''));
+    $pass_ok = ADMIN_PASS_HASH !== '' && password_verify((string)($_POST['admin_pass'] ?? ''), ADMIN_PASS_HASH);
+
+    if ($user_ok && $pass_ok) {
+        session_regenerate_id(true); // Prevenir session fixation
         $_SESSION['admin_logged'] = true;
         header('Location: admin.php');
         exit;
@@ -33,6 +57,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_login'])) {
 // ── PROTECCIÓN ─────────────────────────────────────────────
 $logged = isset($_SESSION['admin_logged']) && $_SESSION['admin_logged'] === true;
 
+// Helper: responder JSON y salir
+function json_out($data) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($data);
+    exit;
+}
+
 // ── PROCESAR ACCIONES AJAX / POST (solo si está logueado) ──
 if ($logged) {
     $action = $_POST['action'] ?? $_GET['action'] ?? '';
@@ -40,92 +71,157 @@ if ($logged) {
     // ---- ELIMINAR PRODUCTO ----
     if ($action === 'delete_producto' && isset($_POST['id'])) {
         $id = (int)$_POST['id'];
-        $conexion->query("DELETE FROM productos WHERE id=$id");
-        echo json_encode(['ok' => true]); exit;
+        $stmt = $conexion->prepare("DELETE FROM productos WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->close();
+        json_out(['ok' => true]);
     }
 
     // ---- TOGGLE ACTIVO PRODUCTO ----
     if ($action === 'toggle_producto' && isset($_POST['id'])) {
         $id = (int)$_POST['id'];
-        $conexion->query("UPDATE productos SET activo = IF(activo=1,0,1) WHERE id=$id");
-        $r = $conexion->query("SELECT activo FROM productos WHERE id=$id")->fetch_assoc();
-        echo json_encode(['activo' => (int)$r['activo']]); exit;
+        $stmt = $conexion->prepare("UPDATE productos SET activo = IF(activo=1,0,1) WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->close();
+
+        $stmt = $conexion->prepare("SELECT activo FROM productos WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $r = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        json_out(['activo' => (int)($r['activo'] ?? 0)]);
     }
 
     // ---- GUARDAR PRODUCTO (nuevo o edición) ----
     if ($action === 'save_producto') {
         $id          = (int)($_POST['id'] ?? 0);
-        $nombre      = $conexion->real_escape_string(trim($_POST['nombre']));
-        $descripcion = $conexion->real_escape_string(trim($_POST['descripcion']));
-        $precio      = (float)$_POST['precio'];
-        $precio_of   = $_POST['precio_oferta'] !== '' ? (float)$_POST['precio_oferta'] : 'NULL';
-        $cat_id      = (int)$_POST['categoria_id'];
-        $stock       = (int)$_POST['stock'];
+        $nombre      = trim($_POST['nombre'] ?? '');
+        $descripcion = trim($_POST['descripcion'] ?? '');
+        $precio      = (float)($_POST['precio'] ?? 0);
+        $precio_of   = (isset($_POST['precio_oferta']) && $_POST['precio_oferta'] !== '')
+                        ? (float)$_POST['precio_oferta']
+                        : null;
+        $cat_id      = (int)($_POST['categoria_id'] ?? 0);
+        $stock       = (int)($_POST['stock'] ?? 0);
         $destacado   = isset($_POST['destacado']) ? 1 : 0;
-        $activo      = isset($_POST['activo']) ? 1 : 0;
-        $imagen      = $conexion->real_escape_string(trim($_POST['imagen']));
-
-        if (is_float($precio_of)) {
-            $po_sql = "'$precio_of'";
-        } else {
-            $po_sql = 'NULL';
-        }
+        $activo      = isset($_POST['activo'])    ? 1 : 0;
+        $imagen      = trim($_POST['imagen'] ?? '');
 
         if ($id > 0) {
-            $sql = "UPDATE productos SET nombre='$nombre', descripcion='$descripcion',
-                    precio='$precio', precio_oferta=$po_sql, imagen='$imagen',
-                    categoria_id=$cat_id, stock=$stock, destacado=$destacado, activo=$activo
-                    WHERE id=$id";
+            // UPDATE
+            if ($precio_of === null) {
+                $stmt = $conexion->prepare(
+                    "UPDATE productos SET nombre=?, descripcion=?, precio=?, precio_oferta=NULL,
+                     imagen=?, categoria_id=?, stock=?, destacado=?, activo=? WHERE id=?"
+                );
+                $stmt->bind_param("ssdsiiiii",
+                    $nombre, $descripcion, $precio, $imagen,
+                    $cat_id, $stock, $destacado, $activo, $id
+                );
+            } else {
+                $stmt = $conexion->prepare(
+                    "UPDATE productos SET nombre=?, descripcion=?, precio=?, precio_oferta=?,
+                     imagen=?, categoria_id=?, stock=?, destacado=?, activo=? WHERE id=?"
+                );
+                $stmt->bind_param("ssddsiiiii",
+                    $nombre, $descripcion, $precio, $precio_of, $imagen,
+                    $cat_id, $stock, $destacado, $activo, $id
+                );
+            }
+            $stmt->execute();
+            $stmt->close();
         } else {
-            $sql = "INSERT INTO productos (nombre,descripcion,precio,precio_oferta,imagen,categoria_id,stock,destacado,activo)
-                    VALUES ('$nombre','$descripcion','$precio',$po_sql,'$imagen',$cat_id,$stock,$destacado,$activo)";
+            // INSERT
+            if ($precio_of === null) {
+                $stmt = $conexion->prepare(
+                    "INSERT INTO productos (nombre,descripcion,precio,precio_oferta,imagen,
+                     categoria_id,stock,destacado,activo)
+                     VALUES (?,?,?,NULL,?,?,?,?,?)"
+                );
+                $stmt->bind_param("ssdsiiii",
+                    $nombre, $descripcion, $precio, $imagen,
+                    $cat_id, $stock, $destacado, $activo
+                );
+            } else {
+                $stmt = $conexion->prepare(
+                    "INSERT INTO productos (nombre,descripcion,precio,precio_oferta,imagen,
+                     categoria_id,stock,destacado,activo)
+                     VALUES (?,?,?,?,?,?,?,?,?)"
+                );
+                $stmt->bind_param("ssddsiiii",
+                    $nombre, $descripcion, $precio, $precio_of, $imagen,
+                    $cat_id, $stock, $destacado, $activo
+                );
+            }
+            $stmt->execute();
+            $new_id = $conexion->insert_id;
+            $stmt->close();
+            $id = $new_id;
         }
-        $conexion->query($sql);
-        echo json_encode(['ok' => true, 'id' => $id > 0 ? $id : $conexion->insert_id]); exit;
+        json_out(['ok' => true, 'id' => $id]);
     }
 
     // ---- ACTUALIZAR ESTADO PEDIDO ----
     if ($action === 'update_pedido' && isset($_POST['id'], $_POST['estado'])) {
         $id     = (int)$_POST['id'];
-        $estado = $conexion->real_escape_string($_POST['estado']);
-        $conexion->query("UPDATE pedidos SET estado='$estado' WHERE id=$id");
-        echo json_encode(['ok' => true]); exit;
+        $estado = (string)$_POST['estado'];
+        $stmt = $conexion->prepare("UPDATE pedidos SET estado = ? WHERE id = ?");
+        $stmt->bind_param("si", $estado, $id);
+        $stmt->execute();
+        $stmt->close();
+        json_out(['ok' => true]);
     }
 
     // ---- CAMBIAR ROL USUARIO ----
     if ($action === 'update_rol' && isset($_POST['id'], $_POST['rol'])) {
         $id  = (int)$_POST['id'];
-        $rol = $conexion->real_escape_string($_POST['rol']);
-        $conexion->query("UPDATE usuarios SET rol='$rol' WHERE id=$id");
-        echo json_encode(['ok' => true]); exit;
+        $rol = (string)$_POST['rol'];
+        $stmt = $conexion->prepare("UPDATE usuarios SET rol = ? WHERE id = ?");
+        $stmt->bind_param("si", $rol, $id);
+        $stmt->execute();
+        $stmt->close();
+        json_out(['ok' => true]);
     }
 
     // ---- ELIMINAR USUARIO ----
     if ($action === 'delete_usuario' && isset($_POST['id'])) {
         $id = (int)$_POST['id'];
-        $conexion->query("DELETE FROM usuarios WHERE id=$id");
-        echo json_encode(['ok' => true]); exit;
+        $stmt = $conexion->prepare("DELETE FROM usuarios WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->close();
+        json_out(['ok' => true]);
     }
 
     // ---- GUARDAR CATEGORÍA ----
     if ($action === 'save_categoria') {
         $id     = (int)($_POST['id'] ?? 0);
-        $nombre = $conexion->real_escape_string(trim($_POST['nombre']));
-        $slug   = $conexion->real_escape_string(trim($_POST['slug']));
-        $desc   = $conexion->real_escape_string(trim($_POST['descripcion']));
+        $nombre = trim($_POST['nombre'] ?? '');
+        $slug   = trim($_POST['slug'] ?? '');
+        $desc   = trim($_POST['descripcion'] ?? '');
+
         if ($id > 0) {
-            $conexion->query("UPDATE categorias SET nombre='$nombre', slug='$slug', descripcion='$desc' WHERE id=$id");
+            $stmt = $conexion->prepare("UPDATE categorias SET nombre=?, slug=?, descripcion=? WHERE id=?");
+            $stmt->bind_param("sssi", $nombre, $slug, $desc, $id);
         } else {
-            $conexion->query("INSERT INTO categorias (nombre,slug,descripcion) VALUES ('$nombre','$slug','$desc')");
+            $stmt = $conexion->prepare("INSERT INTO categorias (nombre,slug,descripcion) VALUES (?,?,?)");
+            $stmt->bind_param("sss", $nombre, $slug, $desc);
         }
-        echo json_encode(['ok' => true]); exit;
+        $stmt->execute();
+        $stmt->close();
+        json_out(['ok' => true]);
     }
 
     // ---- ELIMINAR CATEGORÍA ----
     if ($action === 'delete_categoria' && isset($_POST['id'])) {
         $id = (int)$_POST['id'];
-        $conexion->query("DELETE FROM categorias WHERE id=$id");
-        echo json_encode(['ok' => true]); exit;
+        $stmt = $conexion->prepare("DELETE FROM categorias WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->close();
+        json_out(['ok' => true]);
     }
 }
 
@@ -133,25 +229,22 @@ if ($logged) {
 if ($logged) {
     $stats = [];
 
-    // Totales rápidos
-    $stats['productos']  = $conexion->query("SELECT COUNT(*) c FROM productos")->fetch_assoc()['c'];
-    $stats['usuarios']   = $conexion->query("SELECT COUNT(*) c FROM usuarios")->fetch_assoc()['c'];
-    $stats['pedidos']    = $conexion->query("SELECT COUNT(*) c FROM pedidos")->fetch_assoc()['c'];
-    $stats['categorias'] = $conexion->query("SELECT COUNT(*) c FROM categorias")->fetch_assoc()['c'];
+    $stats['productos']  = (int)$conexion->query("SELECT COUNT(*) c FROM productos")->fetch_assoc()['c'];
+    $stats['usuarios']   = (int)$conexion->query("SELECT COUNT(*) c FROM usuarios")->fetch_assoc()['c'];
+    $stats['pedidos']    = (int)$conexion->query("SELECT COUNT(*) c FROM pedidos")->fetch_assoc()['c'];
+    $stats['categorias'] = (int)$conexion->query("SELECT COUNT(*) c FROM categorias")->fetch_assoc()['c'];
     $r = $conexion->query("SELECT SUM(total) s FROM pedidos WHERE estado != 'cancelado'");
     $stats['ingresos']   = number_format((float)($r->fetch_assoc()['s'] ?? 0), 2);
-    $stats['pendientes'] = $conexion->query("SELECT COUNT(*) c FROM pedidos WHERE estado='pendiente'")->fetch_assoc()['c'];
+    $stats['pendientes'] = (int)$conexion->query("SELECT COUNT(*) c FROM pedidos WHERE estado='pendiente'")->fetch_assoc()['c'];
 
-    // Tablas completas
     $productos  = $conexion->query("SELECT p.*, c.nombre cat FROM productos p LEFT JOIN categorias c ON p.categoria_id=c.id ORDER BY p.id DESC")->fetch_all(MYSQLI_ASSOC);
     $categorias = $conexion->query("SELECT * FROM categorias ORDER BY id")->fetch_all(MYSQLI_ASSOC);
     $pedidos    = $conexion->query("SELECT p.*, u.nombre u_nombre, u.email u_email FROM pedidos p LEFT JOIN usuarios u ON p.usuario_id=u.id ORDER BY p.id DESC")->fetch_all(MYSQLI_ASSOC);
     $usuarios   = $conexion->query("SELECT * FROM usuarios ORDER BY id DESC")->fetch_all(MYSQLI_ASSOC);
-
-    // Últimos 5 pedidos para dashboard
     $ultimos_pedidos = $conexion->query("SELECT p.*, u.nombre u_nombre FROM pedidos p LEFT JOIN usuarios u ON p.usuario_id=u.id ORDER BY p.id DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>

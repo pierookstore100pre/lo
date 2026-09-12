@@ -6,14 +6,15 @@ include('conexion.php');
 
 // Si no está logueado, redirigir
 if (!isset($_SESSION['usuario_id'])) {
-    header("Location: iniciar-sesion.php?mensaje=Inicia sesión para ver tu carrito");
+    header("Location: iniciar-sesion.php?mensaje=" . urlencode("Inicia sesión para ver tu carrito"));
     exit;
 }
 
-$usuario_id = intval($_SESSION['usuario_id']);
+$usuario_id = (int) $_SESSION['usuario_id'];
 
 // Consultar el carrito con información del producto usando Prepared Statements
-$sql = "SELECT c.id as carrito_id, c.cantidad, p.id as producto_id, p.nombre, p.precio, p.imagen 
+$sql = "SELECT c.id AS carrito_id, c.cantidad, 
+               p.id AS producto_id, p.nombre, p.precio, p.imagen 
         FROM carrito c 
         INNER JOIN productos p ON c.producto_id = p.id 
         WHERE c.usuario_id = ?";
@@ -43,7 +44,7 @@ include('header.php');
         <div class="alert alert-info"><?= htmlspecialchars($_GET['mensaje']) ?></div>
     <?php endif; ?>
 
-    <?php if (count($items) == 0): ?>
+    <?php if (count($items) === 0): ?>
         <div class="alert alert-info text-center">
             <i class="bi bi-cart-x" style="font-size: 3rem;"></i>
             <h4>Tu carrito está vacío</h4>
@@ -66,20 +67,22 @@ include('header.php');
                     <?php foreach ($items as $item): ?>
                         <tr>
                             <td>
-                                <img src="img/<?= $item['imagen'] ?>" alt="<?= $item['nombre'] ?>" style="height: 60px; object-fit: contain;">
+                                <img src="img/<?= htmlspecialchars($item['imagen']) ?>"
+                                     alt="<?= htmlspecialchars($item['nombre']) ?>"
+                                     style="height: 60px; object-fit: contain;">
                             </td>
-                            <td><?= $item['nombre'] ?></td>
-                            <td>$<?= number_format($item['precio'], 2) ?></td>
+                            <td><?= htmlspecialchars($item['nombre']) ?></td>
+                            <td>$<?= number_format((float)$item['precio'], 2) ?></td>
                             <td>
                                 <form action="actualizar-carrito.php" method="POST" class="d-flex align-items-center gap-2">
-                                    <input type="hidden" name="carrito_id" value="<?= $item['carrito_id'] ?>">
-                                    <input type="number" name="cantidad" value="<?= $item['cantidad'] ?>" min="1" class="form-control form-control-sm" style="width: 70px;">
+                                    <input type="hidden" name="carrito_id" value="<?= (int)$item['carrito_id'] ?>">
+                                    <input type="number" name="cantidad" value="<?= (int)$item['cantidad'] ?>" min="1" class="form-control form-control-sm" style="width: 70px;">
                                     <button type="submit" class="btn btn-sm btn-warning">Actualizar</button>
                                 </form>
                             </td>
-                            <td>$<?= number_format($item['precio'] * $item['cantidad'], 2) ?></td>
+                            <td>$<?= number_format((float)$item['precio'] * (int)$item['cantidad'], 2) ?></td>
                             <td>
-                                <a href="eliminar-carrito.php?id=<?= $item['carrito_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este producto del carrito?')">
+                                <a href="eliminar-carrito.php?id=<?= (int)$item['carrito_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este producto del carrito?')">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </td>

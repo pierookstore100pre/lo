@@ -1,4 +1,9 @@
 <?php
+include_once('conexion.php');
+include('header.php');
+?>
+
+<?php
 // ============================================
 // 1. PROCESAR EL FORMULARIO (ANTES DE CUALQUIER HTML)
 // ============================================
@@ -19,7 +24,7 @@ $error = '';
 $email_val = '';
 
 // Procesar el formulario de login
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $clave = $_POST['clave'] ?? '';
     $email_val = $email;
@@ -29,21 +34,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Ingresa un correo electrónico válido.';
     } else {
-        // Buscar el usuario en la BD de forma segura
-        $email_seguro = mysqli_real_escape_string($conexion, $email);
-        $sql = "SELECT id, nombre, email, password FROM usuarios WHERE email = '$email_seguro'";
-        $resultado = $conexion->query($sql);
+        // ---- Buscar usuario con consulta preparada ----
+        $stmt = $conexion->prepare(
+            "SELECT id, nombre, email, password FROM usuarios WHERE email = ? LIMIT 1"
+        );
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
 
-        if ($resultado && $resultado->num_rows == 1) {
+        if ($resultado && $resultado->num_rows === 1) {
             $usuario = $resultado->fetch_assoc();
-            
+            $stmt->close();
+
             // Verificar la contraseña cifrada
             if (password_verify($clave, $usuario['password'])) {
+                // Regenerar el ID de sesión para prevenir session fixation
+                session_regenerate_id(true);
+
                 // Guardar variables de sesión
-                $_SESSION['usuario_id'] = $usuario['id'];
+                $_SESSION['usuario_id']     = $usuario['id'];
                 $_SESSION['usuario_nombre'] = $usuario['nombre'];
-                $_SESSION['usuario_email'] = $usuario['email'];
-                
+                $_SESSION['usuario_email']  = $usuario['email'];
+
                 // Redirigir al inicio
                 header("Location: index.php");
                 exit;
@@ -51,15 +63,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $error = 'El correo electrónico o la contraseña son incorrectos.';
             }
         } else {
+            $stmt->close();
             $error = 'El correo electrónico o la contraseña son incorrectos.';
         }
     }
 }
-
-// ============================================
-// 2. INCLUIR ENCABEZADO GLOBAL
-// ============================================
-include('header.php');
 ?>
 
 <!-- PÁGINA DE INICIO DE SESIÓN SENCILLA Y PROFESIONAL -->

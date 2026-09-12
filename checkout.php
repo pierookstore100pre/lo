@@ -1,49 +1,70 @@
 <?php
+// ============================================
+// CHECKOUT - Finalizar compra
+// ============================================
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 include('conexion.php');
 
-// Si el usuario no está logueado, redirigir al inicio de sesión
+// Si el usuario no está logueado, redirigir
 if (!isset($_SESSION['usuario_id'])) {
-    header("Location: iniciar-sesion.php?mensaje=Por favor inicia sesión para procesar tu compra");
+    header("Location: iniciar-sesion.php?mensaje=" . urlencode("Por favor inicia sesión para procesar tu compra"));
     exit;
 }
 
-$usuario_id = intval($_SESSION['usuario_id']);
+$usuario_id = (int) $_SESSION['usuario_id'];
 
-// Consultar los ítems del carrito
-$sql = "SELECT c.id as carrito_id, c.cantidad, p.id as producto_id, p.nombre, p.precio, p.imagen, p.stock 
-        FROM carrito c 
-        INNER JOIN productos p ON c.producto_id = p.id 
-        WHERE c.usuario_id = ?";
-$stmt = $conexion->prepare($sql);
+// ---- Obtener los ítems del carrito ----
+$stmt = $conexion->prepare(
+    "SELECT c.id AS carrito_id, c.cantidad,
+            p.id AS producto_id, p.nombre, p.precio, p.imagen, p.stock
+     FROM carrito c
+     INNER JOIN productos p ON c.producto_id = p.id
+     WHERE c.usuario_id = ?"
+);
 $stmt->bind_param("i", $usuario_id);
 $stmt->execute();
-$resultado = $stmt->get_result();
+$res = $stmt->get_result();
 
 $items = [];
 $total = 0;
-if ($resultado && $resultado->num_rows > 0) {
-    while ($row = $resultado->fetch_assoc()) {
-        $items[] = $row;
-        $total += $row['precio'] * $row['cantidad'];
+$sin_stock = [];
+
+while ($row = $res->fetch_assoc()) {
+    $items[] = $row;
+    $total += (float)$row['precio'] * (int)$row['cantidad'];
+
+    if ((int)$row['cantidad'] > (int)$row['stock']) {
+        $sin_stock[] = $row['nombre'];
     }
 }
 $stmt->close();
 
-// Si el carrito está vacío, redirigir a la tienda
+// Si el carrito está vacío, redirigir
 if (count($items) === 0) {
     header("Location: tienda.php");
     exit;
 }
 
-// Intentar pre-cargar datos del usuario
-$stmt_u = $conexion->prepare("SELECT nombre, email, telefono, direccion FROM usuarios WHERE id = ?");
-$stmt_u->bind_param("i", $usuario_id);
-$stmt_u->execute();
-$usuario_datos = $stmt_u->get_result()->fetch_assoc();
-$stmt_u->close();
+// ---- Pre-cargar datos del usuario ----
+$stmt = $conexion->prepare("SELECT nombre, email, telefono, direccion FROM usuarios WHERE id = ? LIMIT 1");
+$stmt->bind_param("i", $usuario_id);
+$stmt->execute();
+$usuario_datos = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+// ---- Avisos previos ----
+$avisos = [];
+if (empty($usuario_datos['telefono'])) {
+    $avisos[] = 'Agrega tu teléfono para poder coordinar la entrega.';
+}
+if (empty($usuario_datos['direccion'])) {
+    $avisos[] = 'Agrega tu dirección de entrega.';
+}
+if (!empty($sin_stock)) {
+    $avisos[] = 'Algunos productos no tienen stock suficiente: ' . implode(', ', $sin_stock);
+}
 
 include('header.php');
 ?>
@@ -53,6 +74,15 @@ include('header.php');
         <h3 class="font-weight-bold text-dark mb-1">Finalizar Compra</h3>
         <p class="text-muted">Por favor ingresa los datos para la entrega de tu pedido en La Compu de Lolo</p>
     </div>
+
+    <?php if (!empty($avisos)): ?>
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill mr-1"></i>
+            <?php foreach ($avisos as $aviso): ?>
+                <div><?= htmlspecialchars($aviso) ?></div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 
     <form action="procesar-pedido.php" method="POST">
         <div class="row">
@@ -65,23 +95,32 @@ include('header.php');
 
                     <div class="form-group mb-3">
                         <label class="font-weight-bold small">Nombre Completo</label>
-                        <input type="text" name="nombre" class="form-control" value="<?= htmlspecialchars($usuario_datos['nombre'] ?? $_SESSION['usuario_nombre'] ?? '') ?>" required>
+                        <input type="text" name="nombre" class="form-control"
+                               value="<?= htmlspecialchars($usuario_datos['nombre'] ?? $_SESSION['usuario_nombre'] ?? '') ?>"
+                               maxlength="100" required>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 form-group mb-3">
                             <label class="font-weight-bold small">Teléfono de Contacto</label>
-                            <input type="tel" name="telefono" class="form-control" placeholder="Ej. 987654321" value="<?= htmlspecialchars($usuario_datos['telefono'] ?? '') ?>" required>
+                            <input type="tel" name="telefono" class="form-control"
+                                   placeholder="Ej. 987654321"
+                                   value="<?= htmlspecialchars($usuario_datos['telefono'] ?? '') ?>"
+                                   maxlength="20" required>
                         </div>
                         <div class="col-md-6 form-group mb-3">
                             <label class="font-weight-bold small">Correo Electrónico</label>
-                            <input type="email" class="form-control" value="<?= htmlspecialchars($usuario_datos['email'] ?? '') ?>" readonly style="background-color: #f8f9fa;">
+                            <input type="email" class="form-control"
+                                   value="<?= htmlspecialchars($usuario_datos['email'] ?? '') ?>"
+                                   readonly style="background-color: #f8f9fa;">
                         </div>
                     </div>
 
                     <div class="form-group mb-4">
                         <label class="font-weight-bold small">Dirección Completa de Entrega</label>
-                        <textarea name="direccion" class="form-control" rows="3" placeholder="Av. Principal #123, Distrito, Ciudad..." required><?= htmlspecialchars($usuario_datos['direccion'] ?? '') ?></textarea>
+                        <textarea name="direccion" class="form-control" rows="3"
+                                  placeholder="Av. Principal #123, Distrito, Ciudad..."
+                                  maxlength="255" required><?= htmlspecialchars($usuario_datos['direccion'] ?? '') ?></textarea>
                     </div>
 
                     <h6 class="font-weight-bold mb-3 border-bottom pb-2 text-dark">
@@ -106,7 +145,7 @@ include('header.php');
                         </div>
 
                         <div class="custom-control custom-radio mb-3">
-                            <input type="radio" id="pagoContraentrega" name="metodo_pago" value="contraentrega" class="custom-control-input">
+                            <input type="radio" id="pagoContraentrega" name="metodo_pago" value="contra_entrega" class="custom-control-input">
                             <label class="custom-control-label font-weight-bold" for="pagoContraentrega">
                                 Pago Contra Entrega
                             </label>
@@ -124,19 +163,27 @@ include('header.php');
                     </h6>
 
                     <div class="mb-3" style="max-height: 280px; overflow-y: auto;">
-                        <?php foreach ($items as $item): ?>
+                        <?php foreach ($items as $item):
+                            $precio_u = (float) $item['precio'];
+                            $cant     = (int)   $item['cantidad'];
+                            $subtotal = $precio_u * $cant;
+                        ?>
                             <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
                                 <div class="d-flex align-items-center">
-                                    <img src="img/<?= htmlspecialchars($item['imagen']) ?>" alt="<?= htmlspecialchars($item['nombre']) ?>" style="width: 45px; height: 45px; object-fit: contain; background: #fff; border-radius: 4px;" class="p-1 border mr-2">
+                                    <img src="img/<?= htmlspecialchars($item['imagen']) ?>"
+                                         alt="<?= htmlspecialchars($item['nombre']) ?>"
+                                         style="width: 45px; height: 45px; object-fit: contain; background: #fff; border-radius: 4px;"
+                                         class="p-1 border mr-2">
                                     <div>
-                                        <h6 class="mb-0 text-truncate font-weight-bold" style="max-width: 170px; font-size: 0.85rem;" title="<?= htmlspecialchars($item['nombre']) ?>">
+                                        <h6 class="mb-0 text-truncate font-weight-bold" style="max-width: 170px; font-size: 0.85rem;"
+                                            title="<?= htmlspecialchars($item['nombre']) ?>">
                                             <?= htmlspecialchars($item['nombre']) ?>
                                         </h6>
-                                        <small class="text-muted">Cantidad: <?= $item['cantidad'] ?></small>
+                                        <small class="text-muted">Cantidad: <?= $cant ?></small>
                                     </div>
                                 </div>
                                 <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">
-                                    $<?= number_format($item['precio'] * $item['cantidad'], 2) ?>
+                                    $<?= number_format($subtotal, 2) ?>
                                 </span>
                             </div>
                         <?php endforeach; ?>
@@ -157,7 +204,8 @@ include('header.php');
                             <span class="h4 font-weight-bold text-primary">$<?= number_format($total, 2) ?></span>
                         </div>
 
-                        <button type="submit" class="btn btn-primary btn-block btn-lg font-weight-bold py-3">
+                        <button type="submit" class="btn btn-primary btn-block btn-lg font-weight-bold py-3"
+                                <?= !empty($sin_stock) ? 'disabled' : '' ?>>
                             Confirmar y Realizar Pedido
                         </button>
                         <a href="carrito.php" class="btn btn-outline-secondary btn-block mt-2">
@@ -171,4 +219,3 @@ include('header.php');
 </div>
 
 <?php include('footer.php'); ?>
-

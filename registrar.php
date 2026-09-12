@@ -8,15 +8,21 @@ if (session_status() === PHP_SESSION_NONE) {
 
 include('conexion.php');
 
+// Si ya está logueado, redirigir al inicio
+if (isset($_SESSION['usuario_id'])) {
+    header('Location: index.php');
+    exit;
+}
+
 // Variable para mensajes
-$error  = '';
+$error      = '';
 $nombre_val = '';
 $email_val  = '';
 
 // ============================================
 // 2. PROCESAR EL FORMULARIO (LÓGICA PHP)
 // ============================================
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre          = trim($_POST['nombre'] ?? '');
     $email           = trim($_POST['email'] ?? '');
     $clave           = $_POST['clave'] ?? '';
@@ -34,29 +40,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } elseif ($clave !== $confirmar_clave) {
         $error = 'Las contraseñas no coinciden.';
     } else {
-        $email_check   = mysqli_real_escape_string($conexion, $email);
-        $sql_check     = "SELECT id FROM usuarios WHERE email = '$email_check'";
-        $resultado_check = $conexion->query($sql_check);
+        // ---- Verificar si el email ya existe (consulta preparada) ----
+        $stmt = $conexion->prepare("SELECT id FROM usuarios WHERE email = ? LIMIT 1");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $stmt->store_result();
 
-        if ($resultado_check->num_rows > 0) {
+        if ($stmt->num_rows > 0) {
             $error = 'Este correo electrónico ya está registrado.';
+            $stmt->close();
         } else {
-            $clave_hash    = password_hash($clave, PASSWORD_DEFAULT);
-            $nombre_seguro = mysqli_real_escape_string($conexion, $nombre);
+            $stmt->close();
 
-            $sql = "INSERT INTO usuarios (nombre, email, password)
-                    VALUES ('$nombre_seguro', '$email_check', '$clave_hash')";
+            // ---- Insertar el nuevo usuario (consulta preparada) ----
+            $clave_hash = password_hash($clave, PASSWORD_DEFAULT);
 
-            if ($conexion->query($sql)) {
+            $stmt = $conexion->prepare(
+                "INSERT INTO usuarios (nombre, email, password) VALUES (?, ?, ?)"
+            );
+            $stmt->bind_param("sss", $nombre, $email, $clave_hash);
+
+            if ($stmt->execute()) {
+                $stmt->close();
                 header("Location: iniciar-sesion.php?registro=ok");
                 exit;
             } else {
-                $error = 'Error al registrar: ' . $conexion->error;
+                $error = 'Error al registrar. Intenta nuevamente.';
+                $stmt->close();
             }
         }
     }
 }
 ?>
+
 <?php include('header.php'); ?>
 
 <!-- PÁGINA DE REGISTRO -->

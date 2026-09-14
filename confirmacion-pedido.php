@@ -154,9 +154,9 @@ include('header.php');
                                      class="mr-3 border rounded p-1">
                                 <span class="font-weight-bold text-dark"><?= htmlspecialchars($det['nombre']) ?></span>
                             </td>
-                            <td>$<?= number_format($precio_u, 2) ?></td>
+                            <td>S/ <?= number_format($precio_u, 2) ?></td>
                             <td><?= $cant ?></td>
-                            <td class="text-right font-weight-bold text-dark">$<?= number_format($subtotal, 2) ?></td>
+                            <td class="text-right font-weight-bold text-dark">S/ <?= number_format($subtotal, 2) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -164,7 +164,7 @@ include('header.php');
                     <tr>
                         <th colspan="3" class="text-right font-weight-bold h6">Total Pagado:</th>
                         <th class="text-right font-weight-bold text-primary h5">
-                            $<?= number_format($pedido_total, 2) ?>
+                            S/ <?= number_format($pedido_total, 2) ?>
                         </th>
                     </tr>
                 </tfoot>

@@ -183,7 +183,7 @@ include('header.php');
                                     </div>
                                 </div>
                                 <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">
-                                    $<?= number_format($subtotal, 2) ?>
+                                    S/ <?= number_format($subtotal, 2) ?>
                                 </span>
                             </div>
                         <?php endforeach; ?>
@@ -192,7 +192,7 @@ include('header.php');
                     <div class="border-top pt-3">
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Subtotal:</span>
-                            <span class="font-weight-bold">$<?= number_format($total, 2) ?></span>
+                            <span class="font-weight-bold">S/ <?= number_format($total, 2) ?></span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Envío:</span>
@@ -201,7 +201,7 @@ include('header.php');
                         <hr>
                         <div class="d-flex justify-content-between mb-4">
                             <span class="h5 font-weight-bold">Total:</span>
-                            <span class="h4 font-weight-bold text-primary">$<?= number_format($total, 2) ?></span>
+                            <span class="h4 font-weight-bold text-primary">S/ <?= number_format($total, 2) ?></span>
                         </div>
 
                         <button type="submit" class="btn btn-primary btn-block btn-lg font-weight-bold py-3"

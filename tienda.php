@@ -162,7 +162,7 @@ if ($categoria_id > 0) {
                                         <?= htmlspecialchars($producto['nombre']) ?>
                                     </h6>
                                     <div class="d-flex justify-content-between align-items-center mt-2">
-                                        <span class="price-tag">$<?= number_format($producto['precio'], 2) ?></span>
+                                        <span class="price-tag">S/ <?= number_format($producto['precio'], 2) ?></span>
                                         <span class="stock-text">Stock: <?= $producto['stock'] ?></span>
                                     </div>
                                     <div class="card-footer-action">
@@ -200,4 +200,4 @@ $stmt->close();
 include('footer.php'); 
 ?>
 
-
+

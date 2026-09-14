@@ -18,17 +18,12 @@ if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.use_strict_mode', '1');
     session_start();
 }
+
 include_once('conexion.php');
 
-// ── CREDENCIALES (desde config.php, NO hardcodeadas) ───────
-if (file_exists(__DIR__ . '/config.php')) {
-    include_once(__DIR__ . '/config.php');
-}
+// Verificar que las credenciales de admin existan (fallback por si falta config.php)
 if (!defined('ADMIN_USER'))     define('ADMIN_USER', 'admin');
-if (!defined('ADMIN_PASS_HASH')) {
-    // Fallback de emergencia: si no existe config.php, se deniega el acceso
-    define('ADMIN_PASS_HASH', '');
-}
+if (!defined('ADMIN_PASS_HASH')) define('ADMIN_PASS_HASH', '');
 
 // ── LOGOUT ─────────────────────────────────────────────────
 if (isset($_GET['logout'])) {

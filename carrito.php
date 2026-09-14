@@ -72,7 +72,7 @@ include('header.php');
                                      style="height: 60px; object-fit: contain;">
                             </td>
                             <td><?= htmlspecialchars($item['nombre']) ?></td>
-                            <td>$<?= number_format((float)$item['precio'], 2) ?></td>
+                            <td>S/ <?= number_format((float)$item['precio'], 2) ?></td>
                             <td>
                                 <form action="actualizar-carrito.php" method="POST" class="d-flex align-items-center gap-2">
                                     <input type="hidden" name="carrito_id" value="<?= (int)$item['carrito_id'] ?>">
@@ -80,7 +80,7 @@ include('header.php');
                                     <button type="submit" class="btn btn-sm btn-warning">Actualizar</button>
                                 </form>
                             </td>
-                            <td>$<?= number_format((float)$item['precio'] * (int)$item['cantidad'], 2) ?></td>
+                            <td>S/ <?= number_format((float)$item['precio'] * (int)$item['cantidad'], 2) ?></td>
                             <td>
                                 <a href="eliminar-carrito.php?id=<?= (int)$item['carrito_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este producto del carrito?')">
                                     <i class="bi bi-trash"></i>
@@ -92,7 +92,7 @@ include('header.php');
                 <tfoot>
                     <tr>
                         <td colspan="4" class="text-end fw-bold">Total:</td>
-                        <td colspan="2" class="fw-bold fs-5 text-danger">$<?= number_format($total, 2) ?></td>
+                        <td colspan="2" class="fw-bold fs-5 text-danger">S/ <?= number_format($total, 2) ?></td>
                     </tr>
                 </tfoot>
             </table>
